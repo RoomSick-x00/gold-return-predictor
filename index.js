@@ -1,4 +1,4 @@
-// Inside the function: 
+// Inside the function:
 // function calculateBreakEvenPrice(price, quantity, gst) {
 //   if (price > 0 && quantity > 0 && gst >= 0) {
 //     // calculate total cost before GST
@@ -13,7 +13,6 @@
 //   }
 //   return null; // invalid input
 // }
-
 
 // to get user input in terminal
 // const readline = require("readline");
@@ -39,8 +38,6 @@
 //   });
 // });
 
-
-
 // call it with sample values
 // Steps:
 // 1. Calculate total cost before GST
@@ -50,29 +47,70 @@
 // Output:
 // break-even price
 
-
 // working on h multiple investments:
+const readline = require("readline");
 
-const investments = [
-  {price: 14122, quantity: 0.1, gst: 3},
-  {price: 14500, quantity: 0.2, gst: 3}
-];
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
-function calculatePortfolioBreakEven(investments){
+rl.question("Enter the number of investements: ", (numberOfInvestements) => {
+  const n = Number(numberOfInvestements);
+  if (n <= 0) {
+    console.log("Number of investments must be greater than 0");
+    rl.close();
+    return;
+  }
+  askInvestment(0, n);
+});
+const investments = [];
+
+function askInvestment(count, n) {
+  console.log(`\nInvestment ${count + 1}`);
+
+  rl.question("Enter price per gram: ", (priceInput) => {
+    const price = Number(priceInput);
+
+    rl.question("Enter quantity in grams: ", (quantityInput) => {
+      const quantity = Number(quantityInput);
+
+      rl.question("Enter GST percentage: ", (gstInput) => {
+        const gst = Number(gstInput);
+
+        investments.push({ price, quantity, gst });
+
+        if (count + 1 < n) {
+          askInvestment(count + 1, n);
+        } else {
+          const result = calculatePortfolioBreakEven(investments);
+          console.log("Portfolio break-even price per gram:", result);
+          rl.close();
+        }
+      });
+    });
+  });
+}
+
+// const investments = [
+//   {price: 14122, quantity: 0.1, gst: 3},
+//   {price: 14500, quantity: 0.2, gst: 3}
+// ];
+
+function calculatePortfolioBreakEven(investments) {
   let totalInvested = 0;
   let totalQuantity = 0;
 
-  for(let inv of investments){
-    const investedAmount = (inv.price * inv.quantity) * (1 + inv.gst/100);
+  for (let inv of investments) {
+    const investedAmount = inv.price * inv.quantity * (1 + inv.gst / 100);
     totalInvested += investedAmount;
     totalQuantity += inv.quantity;
   }
 
-  if(totalQuantity === 0) return null;
+  if (totalQuantity === 0) return null;
 
   return totalInvested / totalQuantity;
 }
 
-
-const portfolioBreakEven = calculatePortfolioBreakEven(investments);
-console.log("Portfolio break-even price per gram:", portfolioBreakEven);
+// const portfolioBreakEven = calculatePortfolioBreakEven(investments);
+// console.log("Portfolio break-even price per gram:", portfolioBreakEven);
