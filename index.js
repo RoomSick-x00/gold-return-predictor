@@ -62,11 +62,14 @@ rl.question("Enter the number of investements: ", (numberOfInvestements) => {
     rl.close();
     return;
   }
-  askInvestment(0, n);
+  rl.question("Enter current gold price per gram: ", (currentPrice) => {
+    const currentGoldPrice = Number(currentPrice);
+    askInvestment(0, n, currentGoldPrice);
+  });
 });
 const investments = [];
 
-function askInvestment(count, n) {
+function askInvestment(count, n, currentGoldPrice) {
   console.log(`\nInvestment ${count + 1}`);
 
   rl.question("Enter price per gram: ", (priceInput) => {
@@ -77,19 +80,30 @@ function askInvestment(count, n) {
 
       rl.question("Enter GST percentage: ", (gstInput) => {
         const gst = Number(gstInput);
-
         investments.push({ price, quantity, gst });
-
         if (count + 1 < n) {
-          askInvestment(count + 1, n);
+          askInvestment(count + 1, n, currentGoldPrice);
         } else {
           const result = calculatePortfolioBreakEven(investments);
-          console.log("Portfolio break-even price per gram:", result);
+          const currentValue = currentGoldPrice * result.totalQuantity;
           console.log("--------------------------------");
           console.log("Investment Summary: ");
-          console.log("Total Invested Amount:", totalInvested);
-          console.log("Total Quantity (grams):", totalQuantity);
+          console.log("Total Invested Amount:", result.totalInvested);
+          console.log("Total Quantity (grams):", result.totalQuantity);
+          console.log("Portfolio break-even price per gram:",result.breakEvenPricePerGram);
+          console.log("Current Portfolio Value:", currentValue);
           console.log("--------------------------------");
+          if (currentGoldPrice > result.breakEvenPricePerGram) {
+            const profit =(currentGoldPrice - result.breakEvenPricePerGram)*result.totalQuantity;
+            console.log("Status: PROFIT");
+            console.log("Profit Amount:", profit.toFixed(2));
+          } else if (currentGoldPrice < result.breakEvenPricePerGram) {
+            const loss =(result.breakEvenPricePerGram - currentGoldPrice)*result.totalQuantity;
+            console.log("Status: LOSS");
+            console.log("Loss Amount:", loss.toFixed(2));
+          } else {
+            console.log("Status: BREAK-EVEN");
+          }
           rl.close();
         }
       });
@@ -102,9 +116,9 @@ function askInvestment(count, n) {
 //   {price: 14500, quantity: 0.2, gst: 3}
 // ];
 
-let totalInvested = 0;
-let totalQuantity = 0;
 function calculatePortfolioBreakEven(investments) {
+  let totalInvested = 0;
+  let totalQuantity = 0;
 
   for (let inv of investments) {
     const investedAmount = inv.price * inv.quantity * (1 + inv.gst / 100);
@@ -114,7 +128,13 @@ function calculatePortfolioBreakEven(investments) {
 
   if (totalQuantity === 0) return null;
 
-  return totalInvested / totalQuantity;
+  const breakEvenPricePerGram = totalInvested / totalQuantity;
+
+  return {
+    breakEvenPricePerGram,
+    totalInvested,
+    totalQuantity,
+  };
 }
 
 // const portfolioBreakEven = calculatePortfolioBreakEven(investments);
