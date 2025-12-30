@@ -1,0 +1,6 @@
+{
+  "investments": [
+    { "price": 14126, "quantity": 0.2, "gst": 3 },
+    { "price": 12456, "quantity": 0.8, "gst": 3 }
+  ]
+}

@@ -1,53 +1,4 @@
-// Inside the function:
-// function calculateBreakEvenPrice(price, quantity, gst) {
-//   if (price > 0 && quantity > 0 && gst >= 0) {
-//     // calculate total cost before GST
-//     var totalCostBeforeGST = price * quantity;
-//     // calculate GST
-//     var gstAmount = (totalCostBeforeGST * gst) / 100;
-
-//     var totalCostAfterGST = totalCostBeforeGST + gstAmount;
-
-//     // return break-even price per gram
-//     return totalCostAfterGST / quantity;
-//   }
-//   return null; // invalid input
-// }
-
-// to get user input in terminal
-// const readline = require("readline");
-
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
-
-// rl.question("Enter the price per gram of gold: ", (priceInput) => {
-//   const price = Number(priceInput);
-//   rl.question("Enter the quantity in grams: ", (quantityInput) => {
-//     const quantity = Number(quantityInput);
-//     rl.question("Enter the GST percentage: ", (gstInput) => {
-//       const gst = Number(gstInput);
-//       const breakEven = calculateBreakEvenPrice(price, quantity, gst);
-//       if (breakEven === null) {
-//         console.log("Invalid input provided");
-//       } else {
-//         console.log("Break-even price per gram:", breakEven);
-//       }
-//     });
-//   });
-// });
-
-// call it with sample values
-// Steps:
-// 1. Calculate total cost before GST
-// 2. Calculate GST amount
-// 3. Calculate total cost after GST
-// 4. Calculate break-even price per gram
-// Output:
-// break-even price
-
-// working on h multiple investments:
+const fs = require("fs");
 const readline = require("readline");
 
 const rl = readline.createInterface({
@@ -55,19 +6,53 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-rl.question("Enter the number of investements: ", (numberOfInvestements) => {
-  const n = Number(numberOfInvestements);
-  if (n <= 0) {
-    console.log("Number of investments must be greater than 0");
-    rl.close();
-    return;
+const dataFile = "gold-return-predictor\\portfolio.json";
+let investments = [];
+
+if (fs.existsSync(dataFile)) {
+  const fileData = fs.readFileSync(dataFile, "utf-8");
+  const parsedData = JSON.parse(fileData);
+
+  if (Array.isArray(parsedData.investments)) {
+    investments = parsedData.investments;
+    console.log(`Loaded ${investments.length} portfolio investments.`);
   }
-  rl.question("Enter current gold price per gram: ", (currentPrice) => {
-    const currentGoldPrice = Number(currentPrice);
-    askInvestment(0, n, currentGoldPrice);
+}
+
+if (investments.length > 0) {
+  console.log("1. Continue with existing portfolio");
+  console.log("2. Start a new portfolio");
+
+  rl.question("Choose an option (1 or 2): ", (choice) => {
+    if (choice === "2") {
+      investments = [];
+      savePortfolio();
+    }
+    startInvestmentFlow();
   });
-});
-const investments = [];
+} else {
+  startInvestmentFlow();
+}
+
+function savePortfolio() {
+  fs.writeFileSync(dataFile, JSON.stringify({ investments }, null, 2));
+}
+
+function startInvestmentFlow() {
+  rl.question("Enter the number of investements: ", (numberOfInvestements) => {
+    const n = Number(numberOfInvestements);
+    if (n <= 0) {
+      console.log("Number of investments must be greater than 0");
+      rl.close();
+      return;
+    }
+    rl.question("Enter current gold price per gram: ", (currentPrice) => {
+      const currentGoldPrice = Number(currentPrice);
+      askInvestment(0, n, currentGoldPrice);
+    });
+  });
+}
+
 
 function askInvestment(count, n, currentGoldPrice) {
   console.log(`\nInvestment ${count + 1}`);
@@ -90,30 +75,33 @@ function askInvestment(count, n, currentGoldPrice) {
           console.log("Investment Summary: ");
           console.log("Total Invested Amount:", result.totalInvested);
           console.log("Total Quantity (grams):", result.totalQuantity);
-          console.log("Portfolio break-even price per gram:",result.breakEvenPricePerGram.toFixed(2));
+          console.log(
+            "Portfolio break-even price per gram:",
+            result.breakEvenPricePerGram.toFixed(2)
+          );
           console.log("Current Portfolio Value:", currentValue.toFixed(2));
           console.log("--------------------------------");
           if (currentGoldPrice > result.breakEvenPricePerGram) {
-            const profit =(currentGoldPrice - result.breakEvenPricePerGram)*result.totalQuantity;
+            const profit =(currentGoldPrice - result.breakEvenPricePerGram) *result.totalQuantity;
             console.log("Status: PROFIT");
             console.log("Profit Amount:", profit.toFixed(2));
           } else if (currentGoldPrice < result.breakEvenPricePerGram) {
-            const loss =(result.breakEvenPricePerGram - currentGoldPrice)*result.totalQuantity;
+            const loss =(result.breakEvenPricePerGram - currentGoldPrice) *result.totalQuantity;
             console.log("Status: LOSS");
             console.log("Loss Amount:", loss.toFixed(2));
           } else {
             console.log("Status: BREAK-EVEN");
           }
-          rl.question("Enter target profit amount: ", (targetProfit)=>{
+          rl.question("Enter target profit amount: ", (targetProfit) => {
             const targetProfitAmount = Number(targetProfit);
             if (isNaN(targetProfitAmount) || targetProfitAmount < 0) {
               console.log("Invalid target profit amount");
               rl.close();
               return;
             }
-            const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
-            console.log(`To earn ₹${targetProfitAmount},\nGold must reach ₹, ${targetPricePerGram.toFixed(2)} per gram.`);
-            const extraAboveBreakEven =targetPricePerGram - result.breakEvenPricePerGram;
+            const targetPricePerGram =(result.totalInvested + targetProfitAmount) /result.totalQuantity;
+            console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
+            const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
             console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
             rl.close();
           });
