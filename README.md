@@ -58,4 +58,20 @@ Planned Enhancements:
 - Live gold price comparison
 - Target price estimation
 
+## Roadmap
+
+### v0.3
+- Save investments locally (JSON file)
+- Load previous portfolio on app start
+
+### v0.4
+- Support investment input by total invested amount (auto-calculate quantity after GST)
+- Display break-even portfolio value in addition to break-even price per gram
+- Show amount above/below break-even for better UX
+
+### v0.5
+- Price history simulation
+- Target date estimation (basic)
+
+
 
