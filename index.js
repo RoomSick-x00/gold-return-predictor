@@ -85,6 +85,11 @@ function askInvestment(count, n) {
         } else {
           const result = calculatePortfolioBreakEven(investments);
           console.log("Portfolio break-even price per gram:", result);
+          console.log("--------------------------------");
+          console.log("Investment Summary: ");
+          console.log("Total Invested Amount:", totalInvested);
+          console.log("Total Quantity (grams):", totalQuantity);
+          console.log("--------------------------------");
           rl.close();
         }
       });
@@ -97,9 +102,9 @@ function askInvestment(count, n) {
 //   {price: 14500, quantity: 0.2, gst: 3}
 // ];
 
+let totalInvested = 0;
+let totalQuantity = 0;
 function calculatePortfolioBreakEven(investments) {
-  let totalInvested = 0;
-  let totalQuantity = 0;
 
   for (let inv of investments) {
     const investedAmount = inv.price * inv.quantity * (1 + inv.gst / 100);
