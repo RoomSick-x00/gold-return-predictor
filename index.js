@@ -34,7 +34,7 @@ if (investments.length > 0) {
   startInvestmentFlow();
 }
 
-function savePortfolio(investements) {
+function savePortfolio(investments) {
   const data = JSON.stringify({ investments }, null, 2);
   fs.writeFileSync(dataFile, data);
 }
