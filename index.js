@@ -72,15 +72,14 @@ function askInvestment(count, n, currentGoldPrice) {
           askInvestment(count + 1, n, currentGoldPrice);
         } else {
           const result = calculatePortfolioBreakEven(investments);
+          
           const currentValue = currentGoldPrice * result.totalQuantity;
           console.log("--------------------------------");
           console.log("Investment Summary: ");
           console.log("Total Invested Amount:", result.totalInvested);
           console.log("Total Quantity (grams):", result.totalQuantity);
-          console.log(
-            "Portfolio break-even price per gram:",
-            result.breakEvenPricePerGram.toFixed(2)
-          );
+          console.log("Portfolio break-even price per gram:", result.breakEvenPricePerGram.toFixed(2));
+          console.log("Portfolio break-even value:", result.breakEvenValue.toFixed(2));
           console.log("Current Portfolio Value:", currentValue.toFixed(2));
           console.log("--------------------------------");
           if (currentGoldPrice > result.breakEvenPricePerGram) {
@@ -131,9 +130,12 @@ function calculatePortfolioBreakEven(investments) {
   if (totalQuantity === 0) return null;
 
   const breakEvenPricePerGram = totalInvested / totalQuantity;
+  const breakEvenValue = breakEvenPricePerGram * totalQuantity;
+
 
   return {
     breakEvenPricePerGram,
+    breakEvenValue,
     totalInvested,
     totalQuantity,
   };
