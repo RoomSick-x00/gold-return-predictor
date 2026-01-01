@@ -1,12 +1,13 @@
 const fs = require("fs");
 const readline = require("readline");
+const path = require("path");
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const dataFile = "gold-return-predictor\\portfolio.json";
+const dataFile = path.join(__dirname, "portfolio.json");
 let investments = [];
 
 if (fs.existsSync(dataFile)) {
@@ -28,9 +29,11 @@ if (investments.length > 0) {
       investments = [];
       savePortfolio();
     }
+    console.log("Startup investments:", investments);
     startInvestmentFlow();
   });
 } else {
+  console.log("Startup investments:", investments);
   startInvestmentFlow();
 }
 
