@@ -34,8 +34,9 @@ if (investments.length > 0) {
   startInvestmentFlow();
 }
 
-function savePortfolio() {
-  fs.writeFileSync(dataFile, JSON.stringify({ investments }, null, 2));
+function savePortfolio(investements) {
+  const data = JSON.stringify({ investments }, null, 2);
+  fs.writeFileSync(dataFile, data);
 }
 
 function startInvestmentFlow() {
@@ -65,7 +66,8 @@ function askInvestment(count, n, currentGoldPrice) {
 
       rl.question("Enter GST percentage: ", (gstInput) => {
         const gst = Number(gstInput);
-        investments.push({ price, quantity, gst });
+        investments.push({ price, quantity, gst });\
+        savePortfolio(investments);
         if (count + 1 < n) {
           askInvestment(count + 1, n, currentGoldPrice);
         } else {
