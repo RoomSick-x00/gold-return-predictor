@@ -39,6 +39,46 @@ function savePortfolio(investements) {
   fs.writeFileSync(dataFile, data);
 }
 
+function finalizePortfolio(investments, currentGoldPrice) {
+  const result = calculatePortfolioBreakEven(investments);
+  const currentValue = currentGoldPrice * result.totalQuantity;
+  console.log("--------------------------------");
+  console.log("📊 Portfolio Status");
+  console.log("Current Value : ₹", currentValue.toFixed(2));
+  console.log("Invested      : ₹", result.totalInvested.toFixed(2));
+  console.log("--------------------------------");
+  console.log("Investment Summary: ");
+  console.log("Total Invested Amount:", result.totalInvested);
+  console.log("Total Quantity (grams):", result.totalQuantity);
+  console.log("Portfolio break-even price per gram:", result.breakEvenPricePerGram.toFixed(2));
+  console.log("Portfolio break-even value:", result.breakEvenValue.toFixed(2));
+  console.log("--------------------------------");
+  if (currentGoldPrice > result.breakEvenPricePerGram) {
+    const profit = (currentGoldPrice - result.breakEvenPricePerGram) * result.totalQuantity;
+    console.log("Status: PROFIT");
+    console.log("Profit Amount:", profit.toFixed(2));
+  } else if (currentGoldPrice < result.breakEvenPricePerGram) {
+    const loss = (result.breakEvenPricePerGram - currentGoldPrice) * result.totalQuantity;
+    console.log("Status: LOSS");
+    console.log("Loss Amount:", loss.toFixed(2));
+  } else {
+    console.log("Status: BREAK-EVEN");
+  }
+  rl.question("Enter target profit amount: ", (targetProfit) => {
+    const targetProfitAmount = Number(targetProfit);
+    if (isNaN(targetProfitAmount) || targetProfitAmount < 0) {
+      console.log("Invalid target profit amount");
+      rl.close();
+      return;
+    }
+    const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
+    console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
+    const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
+    console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
+    rl.close();
+  });
+}
+
 function startInvestmentFlow() {
   rl.question("Enter the number of investements: ", (numberOfInvestements) => {
     const n = Number(numberOfInvestements);
@@ -49,67 +89,69 @@ function startInvestmentFlow() {
     }
     rl.question("Enter current gold price per gram: ", (currentPrice) => {
       const currentGoldPrice = Number(currentPrice);
-      askInvestment(0, n, currentGoldPrice);
+      if (isNaN(currentGoldPrice) || currentGoldPrice <= 0) {
+        console.log("Invalid gold price");
+        rl.close();
+        return;
+      }
+      // askInvestment(0, n, currentGoldPrice);
+      console.log("How do you want to add investments?");
+      console.log("1. Price + Quantity + GST");
+      console.log("2. Total Amount Invested + Price + GST");
+      rl.question("choose an option (1 or 2): ", (option) => {
+        if (option !== "1" && option !== "2") {
+          console.log("Invalid option selected. Exiting.");
+          rl.close();
+          return;
+        }
+        const choice = Number(option);
+        askInvestment(0, n, currentGoldPrice, choice);
+      });
     });
   });
 }
 
 
-function askInvestment(count, n, currentGoldPrice) {
-  console.log(`\nInvestment ${count + 1}`);
+function askInvestment(count, n, currentGoldPrice, choice) {
+  function proceed(investmentData) {
+    investments.push(investmentData);
+    savePortfolio(investments);
+    if (count + 1 < n) {
+      askInvestment(count + 1, n, currentGoldPrice, choice);
+    } else {
+      finalizePortfolio(investments, currentGoldPrice);
+    }
+  }
 
-  rl.question("Enter price per gram: ", (priceInput) => {
-    const price = Number(priceInput);
-
-    rl.question("Enter quantity in grams: ", (quantityInput) => {
-      const quantity = Number(quantityInput);
-
-      rl.question("Enter GST percentage: ", (gstInput) => {
-        const gst = Number(gstInput);
-        investments.push({ price, quantity, gst });\
-        savePortfolio(investments);
-        if (count + 1 < n) {
-          askInvestment(count + 1, n, currentGoldPrice);
-        } else {
-          const result = calculatePortfolioBreakEven(investments);
-          
-          const currentValue = currentGoldPrice * result.totalQuantity;
-          console.log("--------------------------------");
-          console.log("Investment Summary: ");
-          console.log("Total Invested Amount:", result.totalInvested);
-          console.log("Total Quantity (grams):", result.totalQuantity);
-          console.log("Portfolio break-even price per gram:", result.breakEvenPricePerGram.toFixed(2));
-          console.log("Portfolio break-even value:", result.breakEvenValue.toFixed(2));
-          console.log("Current Portfolio Value:", currentValue.toFixed(2));
-          console.log("--------------------------------");
-          if (currentGoldPrice > result.breakEvenPricePerGram) {
-            const profit =(currentGoldPrice - result.breakEvenPricePerGram) *result.totalQuantity;
-            console.log("Status: PROFIT");
-            console.log("Profit Amount:", profit.toFixed(2));
-          } else if (currentGoldPrice < result.breakEvenPricePerGram) {
-            const loss =(result.breakEvenPricePerGram - currentGoldPrice) *result.totalQuantity;
-            console.log("Status: LOSS");
-            console.log("Loss Amount:", loss.toFixed(2));
-          } else {
-            console.log("Status: BREAK-EVEN");
-          }
-          rl.question("Enter target profit amount: ", (targetProfit) => {
-            const targetProfitAmount = Number(targetProfit);
-            if (isNaN(targetProfitAmount) || targetProfitAmount < 0) {
-              console.log("Invalid target profit amount");
-              rl.close();
-              return;
-            }
-            const targetPricePerGram =(result.totalInvested + targetProfitAmount) /result.totalQuantity;
-            console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
-            const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
-            console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
-            rl.close();
-          });
-        }
+  if (choice == 2) {
+    console.log(`\nInvestment ${count + 1}`);
+    rl.question("Enter price per gram: ", (priceInput) => {
+      const price = Number(priceInput);
+      rl.question("Enter quantity in grams: ", (quantityInput) => {
+        const quantity = Number(quantityInput);
+        rl.question("Enter GST percentage: ", (gstInput) => {
+          const gst = Number(gstInput);
+          proceed({ price, quantity, gst });
+        });
       });
     });
-  });
+  }
+
+  if (choice == 1) {
+    console.log(`\nInvestment ${count + 1}`);
+    rl.question("Enter price per gram: ", (priceInput) => {
+      const price = Number(priceInput);
+      rl.question("Enter GST percentage: ", (gstInput) => {
+        const gst = Number(gstInput);
+        rl.question("Enter total amount invested: ", (amountInput) => {
+          const totalAmount = Number(amountInput);
+          const netAmount = totalAmount / (1 + gst / 100);
+          const quantity = netAmount / price;
+          proceed({ price, quantity, gst });
+        });
+      });
+    });
+  }
 }
 
 // const investments = [
