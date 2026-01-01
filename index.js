@@ -126,7 +126,7 @@ function askInvestment(count, n, currentGoldPrice, choice) {
     }
   }
 
-  if (choice == 2) {
+  if (choice == 1) {
     console.log(`\nInvestment ${count + 1}`);
     rl.question("Enter price per gram: ", (priceInput) => {
       const price = Number(priceInput);
@@ -140,7 +140,7 @@ function askInvestment(count, n, currentGoldPrice, choice) {
     });
   }
 
-  if (choice == 1) {
+  if (choice == 2) {
     console.log(`\nInvestment ${count + 1}`);
     rl.question("Enter price per gram: ", (priceInput) => {
       const price = Number(priceInput);
