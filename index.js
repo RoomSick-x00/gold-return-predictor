@@ -20,26 +20,33 @@ if (fs.existsSync(dataFile)) {
   }
 }
 
-if (investments.length > 0) {
-  console.log("1. Continue with existing portfolio");
-  console.log("2. Start a new portfolio");
+console.log("Welcome to Gold Return Predictor");
 
-  rl.question("Choose an option (1 or 2): ", (choice) => {
-    if (choice === "2") {
+rl.question("Enter current gold price per gram: ", (priceInput) => {
+  const currentGoldPrice = Number(priceInput);
+
+  if (isNaN(currentGoldPrice) || currentGoldPrice <= 0) {
+    console.log("Invalid gold price");
+    rl.close();
+    return;
+  }
+
+  showMainMenu(currentGoldPrice);
+});
+
+function confirmClearPortfolio(currentGoldPrice) {
+  console.log("⚠️ This will permanently delete all investments.");
+  rl.question("Type YES to confirm, or anything else to cancel: ", (answer) => {
+    if (answer.trim().toUpperCase() === "YES") {
       investments = [];
-      savePortfolio();
+      savePortfolio(investments);
+      console.log("Portfolio Cleared.");
     }
-    console.log("Startup investments:", investments);
-    startInvestmentFlow();
+    else {
+      console.log("Clear portfolio cancelled.");
+    }
+    showMainMenu(currentGoldPrice);
   });
-} else {
-  console.log("Startup investments:", investments);
-  startInvestmentFlow();
-}
-
-function savePortfolio(investments) {
-  const data = JSON.stringify({ investments }, null, 2);
-  fs.writeFileSync(dataFile, data);
 }
 
 function finalizePortfolio(investments, currentGoldPrice) {
@@ -71,18 +78,18 @@ function finalizePortfolio(investments, currentGoldPrice) {
     const targetProfitAmount = Number(targetProfit);
     if (isNaN(targetProfitAmount) || targetProfitAmount < 0) {
       console.log("Invalid target profit amount");
-      rl.close();
+      showMainMenu(currentGoldPrice);
       return;
     }
     const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
     console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
     const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
     console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
-    rl.close();
+    showMainMenu(currentGoldPrice);
   });
 }
 
-function startInvestmentFlow() {
+function startInvestmentFlow(currentGoldPrice) {
   rl.question("Enter the number of investements: ", (numberOfInvestements) => {
     const n = Number(numberOfInvestements);
     if (n <= 0) {
@@ -90,30 +97,25 @@ function startInvestmentFlow() {
       rl.close();
       return;
     }
-    rl.question("Enter current gold price per gram: ", (currentPrice) => {
-      const currentGoldPrice = Number(currentPrice);
-      if (isNaN(currentGoldPrice) || currentGoldPrice <= 0) {
-        console.log("Invalid gold price");
+    // askInvestment(0, n, currentGoldPrice);
+    console.log("How do you want to add investments?");
+    console.log("1. Price + Quantity + GST");
+    console.log("2. Total Amount Invested + Price + GST");
+    rl.question("choose an option (1 or 2): ", (option) => {
+      if (option !== "1" && option !== "2") {
+        console.log("Invalid option selected. Exiting.");
         rl.close();
         return;
       }
-      // askInvestment(0, n, currentGoldPrice);
-      console.log("How do you want to add investments?");
-      console.log("1. Price + Quantity + GST");
-      console.log("2. Total Amount Invested + Price + GST");
-      rl.question("choose an option (1 or 2): ", (option) => {
-        if (option !== "1" && option !== "2") {
-          console.log("Invalid option selected. Exiting.");
-          rl.close();
-          return;
-        }
-        const choice = Number(option);
-        askInvestment(0, n, currentGoldPrice, choice);
-      });
+      const choice = Number(option);
+      askInvestment(0, n, currentGoldPrice, choice);
     });
   });
 }
 
+function savePortfolio(investments) {
+  const data = JSON.stringify({ investments }, null, 2); fs.writeFileSync(dataFile, data); 
+}
 
 function askInvestment(count, n, currentGoldPrice, choice) {
   function proceed(investmentData) {
@@ -157,10 +159,43 @@ function askInvestment(count, n, currentGoldPrice, choice) {
   }
 }
 
-// const investments = [
-//   {price: 14122, quantity: 0.1, gst: 3},
-//   {price: 14500, quantity: 0.2, gst: 3}
-// ];
+function showMainMenu(currentGoldPrice) {
+  console.log("\n======== Main Menu ========");
+  console.log("1. View Portfolio Summary");
+  console.log("2. Add New Investments");
+  console.log("3. Clear Portfolio");
+  console.log("4. Exit");
+
+  rl.question("Choose an option (1-4): ", (option) => {
+    switch (option) {
+      case "1":
+        if (investments.length === 0) {
+          console.log("Portfolio is empty.");
+        }
+        else {
+          finalizePortfolio(investments, currentGoldPrice);
+        }
+        break;
+
+      case "2":
+        startInvestmentFlow(currentGoldPrice)
+        break;
+
+      case "3":
+        confirmClearPortfolio(currentGoldPrice);
+        break;
+
+      case "4":
+        rl.close();
+        break;
+
+      default:
+        console.log("Invalid option. Please choose again.");
+        showMainMenu(currentGoldPrice);
+        break;
+    }
+  });
+}
 
 function calculatePortfolioBreakEven(investments) {
   let totalInvested = 0;
