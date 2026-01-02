@@ -1,77 +1,154 @@
-# Gold Return Predictor (v0.1)
+🪙 Gold Return Predictor (CLI)
+Problem
 
-Problem:
-Gold investors don’t know when they actually enter profit after GST.
+Gold investors often don’t know when they actually enter profit after GST, especially when investments are made at different prices and times.
 
-What this project aims to do:
-- Track gold prices
-- Calculate break-even after GST
-- Estimate when a target price may be achieved
+What this project aims to do
 
-Current status:
-Planning & setup phase.
+Track multiple gold investments
 
-Tech stack (tentative):
-Not fixed yet.
+Calculate portfolio break-even after GST
 
+Show current profit / loss
 
-v0.1 Goal:
-- User can input:
-  - buy price
-  - quantity
-  - GST %
-- App shows:
-  - break-even price
+Help investors understand what price is needed to reach a target profit
 
-v0.2 Goal:
-- User can input:
-  - multiple investments with price, quantity and GST
-- App shows: 
-  - the collectibve break-even price
-- Break even is calculated simply:
-  - break-even price = total invested / total quantity
-  - Total invested includes price × quantity + GST for each investment
-- Example:
-  Investment 1:
-  - Price: 1000 ₹/g
-  - Quantity: 1 g
-  - GST: 3%
-  - Invested amount: 1030 ₹
+Current Status
 
-  Investment 2:
-  - Price: 1200 ₹/g
-  - Quantity: 1 g
-  - GST: 3%
-  - Invested amount: 1236 ₹
+Actively working CLI application (v0.3+)
 
-  Total invested = 2266 ₹
-  Total quantity = 2 g
+Core investment logic is implemented, portfolio persistence works, and UX improvements are in progress.
 
-  Portfolio break-even price = 1133 ₹/g
-- Current Scope:
-  - Calculates break-even price only
-  - Does not predict future prices
-  - Does not include brokerage or making charges
+Tech Stack
 
-Planned Enhancements:
-- Loop-based CLI input for multiple investments
-- Live gold price comparison
-- Target price estimation
+Node.js
 
-## Roadmap
+readline (CLI input)
 
-### v0.3
-- Save investments locally (JSON file)
-- Load previous portfolio on app start
+fs (local file persistence using JSON)
 
-### v0.4
-- Support investment input by total invested amount (auto-calculate quantity after GST)
-- Display break-even portfolio value in addition to break-even price per gram
-- Show amount above/below break-even for better UX
+Implemented Features (Current)
+📥 Investment Input
 
-### v0.5
-- Price history simulation
-- Target date estimation (basic)
+User can input multiple investments using two methods:
 
+Price + Quantity + GST
 
+Total Amount Invested + Price + GST
+(Quantity is auto-calculated after deducting GST)
 
+🧮 Portfolio Calculations
+
+Total invested amount (GST included)
+
+Total gold quantity (grams)
+
+Portfolio break-even price per gram
+
+Portfolio break-even value
+
+Current portfolio value (based on current gold price)
+
+Profit / Loss status
+
+Exact profit or loss amount
+
+🎯 Target Profit Estimation
+
+User enters desired profit amount
+
+App calculates:
+
+Required gold price per gram
+
+Amount above break-even price
+
+💾 Portfolio Persistence
+
+Investments are saved locally in portfolio.json
+
+On startup:
+
+Existing portfolio is loaded
+
+User can choose to continue or start fresh
+
+Example Output
+
+Total Invested Amount
+
+Total Quantity (grams)
+
+Break-even price per gram
+
+Break-even portfolio value
+
+Current value
+
+PROFIT / LOSS status
+
+Target price for desired profit
+
+Version History
+v0.1
+
+Single investment
+
+Break-even calculation after GST
+
+v0.2
+
+Multiple investments
+
+Collective portfolio break-even price
+
+Formula:
+
+break-even price = total invested / total quantity
+
+v0.3 (Completed)
+
+Local portfolio saving (JSON)
+
+Load existing investments on app start
+
+Profit / loss calculation
+
+Target profit → required gold price
+
+v0.4 (In Progress)
+
+Improved UX and clearer summaries
+
+Support multiple input formats (amount-based input)
+
+Better break-even value visibility
+
+Cleaner CLI flow
+
+Current Scope & Limitations
+
+No live gold price fetching
+
+No future price prediction
+
+Brokerage / making charges not included
+
+Manual price input only
+
+Roadmap
+v0.4 (UX Focus)
+
+Cleaner CLI prompts
+
+More intuitive summaries
+
+Better separation of concerns in code
+
+v0.5
+
+Price history simulation
+
+Basic target date estimation
+
+Export portfolio summary
