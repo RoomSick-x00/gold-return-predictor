@@ -85,7 +85,15 @@ function finalizePortfolio(investments, currentGoldPrice) {
     console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
     const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
     console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
+    console.log("--------------------------------");
+    console.log("Do you want to simulate future portfolio value?");
+    rl.question("Type YES to simulate, or anything else to return to main menu: ", (answer)=>{
+      if (answer.trim().toUpperCase() === "YES") {
+        simulateFuturePortfolio(investments, currentGoldPrice);
+        return;
+      }
     showMainMenu(currentGoldPrice);
+    });
   });
 }
 
@@ -130,8 +138,9 @@ function askInvestment(count, n, currentGoldPrice, choice) {
 
   if (choice == 1) {
     console.log(`\nInvestment ${count + 1}`);
-    rl.question("Enter price per gram: ", (priceInput) => {
-      const price = Number(priceInput);
+    rl.question("Enter price per mg: ", (priceInput) => {
+      const pricePerMg = Number(priceInput);
+      const price = pricePerMg * 1000;
       rl.question("Enter quantity in grams: ", (quantityInput) => {
         const quantity = Number(quantityInput);
         rl.question("Enter GST percentage: ", (gstInput) => {
@@ -144,8 +153,9 @@ function askInvestment(count, n, currentGoldPrice, choice) {
 
   if (choice == 2) {
     console.log(`\nInvestment ${count + 1}`);
-    rl.question("Enter price per gram: ", (priceInput) => {
-      const price = Number(priceInput);
+    rl.question("Enter price per mg: ", (priceInput) => {
+      const pricePerMg = Number(priceInput);
+      const price = pricePerMg * 1000;
       rl.question("Enter GST percentage: ", (gstInput) => {
         const gst = Number(gstInput);
         rl.question("Enter total amount invested: ", (amountInput) => {
@@ -157,6 +167,26 @@ function askInvestment(count, n, currentGoldPrice, choice) {
       });
     });
   }
+}
+
+function simulateFuturePortfolio(investments, currentGoldPrice){
+  const result = calculatePortfolioBreakEven(investments);
+  rl.question("Enter the yearly gold price increase percentage to simulate: ", (increaseInput) => {
+    const yearlyGrowth = Number(increaseInput);
+    const monthlyGrowth = yearlyGrowth / 12;
+    rl.question("Enter number of months to simulate: ", (monthsInput) => {
+      const months = Number(monthsInput);
+      let simulatedPrice = currentGoldPrice;
+      for (let month = 1; month<=months; month++){
+        console.log(`\n --- Month ${month} ---`);
+        simulatedPrice = simulatedPrice * (monthlyGrowth / 100 + 1);
+        console.log("Simulated Gold Price per gram: ₹", simulatedPrice.toFixed(2));
+        const simulatedValue = simulatedPrice * result.totalQuantity;
+        console.log(`Current Value : ₹${simulatedValue.toFixed(2)}`);
+      }
+      showMainMenu(currentGoldPrice);
+    });
+  });
 }
 
 function showMainMenu(currentGoldPrice) {
@@ -171,6 +201,7 @@ function showMainMenu(currentGoldPrice) {
       case "1":
         if (investments.length === 0) {
           console.log("Portfolio is empty.");
+          showMainMenu(currentGoldPrice);
         }
         else {
           finalizePortfolio(investments, currentGoldPrice);

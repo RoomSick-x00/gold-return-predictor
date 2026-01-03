@@ -1,3 +1,9 @@
 {
-  "investments": []
+  "investments": [
+    {
+      "price": 15000,
+      "quantity": 0.03883495145631068,
+      "gst": 3
+    }
+  ]
 }
