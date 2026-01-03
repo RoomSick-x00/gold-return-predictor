@@ -105,3 +105,82 @@ This tool helps calculate the true break-even and portfolio status.
 
 - This project focuses on clarity and correctness, not prediction accuracy
 - Designed as a learning and portfolio project
+
+## v0.6 – Future Portfolio Simulation (Assumption-Based)
+
+### Overview
+Version **v0.6** introduces a **future portfolio simulation** feature.  
+This allows users to explore how their existing gold portfolio *might* behave over time based on a **user-defined yearly growth assumption**.
+
+⚠️ This is a **simulation**, not a prediction.  
+No real market data, APIs, or historical prices are used.
+
+---
+
+### Key Idea
+> “If gold price grows at a steady rate, how does my portfolio value change month by month?”
+
+The feature helps users **visualize progression over time**, without making promises or financial claims.
+
+---
+
+### How It Works
+1. The app asks for the **current gold price** once per session (same as v0.5).
+2. User views their portfolio summary.
+3. After viewing the summary, the user is asked whether they want to simulate future performance.
+4. If yes, the app asks for:
+   - **Expected yearly gold price growth (%)**
+   - **Number of months to simulate**
+5. The yearly growth rate is converted into a **monthly growth rate**.
+6. Gold price is simulated **month by month** using simple compounding.
+7. For each month, the app displays:
+   - Month number
+   - Simulated gold price per gram
+   - Simulated total portfolio value
+
+---
+
+### Growth Calculation Logic
+- Yearly growth is divided equally across months:
+  monthlyGrowth = yearlyGrowth / 12
+- Each month’s price is calculated as:
+  newPrice = previousPrice × (1 + monthlyGrowth / 100)
+
+- Portfolio value is recalculated using the **existing total gold quantity**.
+
+This approach is:
+- Simple
+- Transparent
+- Easy to reason about
+- Suitable for CLI-based learning and exploration
+
+---
+
+### What v0.6 Does NOT Do
+- ❌ No real-time or historical price data
+- ❌ No live APIs
+- ❌ No target profit or target date estimation
+- ❌ No financial advice or guarantees
+- ❌ No changes to v0.5 portfolio logic
+
+---
+
+### Why This Feature Exists
+- To introduce **time progression** into the project
+- To keep assumptions explicit and user-controlled
+- To prepare the foundation for future features like:
+- Target date estimation (planned for v0.7)
+- More advanced simulations (optional)
+
+---
+
+### Design Notes
+- v0.5 logic is treated as **frozen**
+- Simulation logic builds **on top of** existing calculations
+- Focus is on clarity and UX, not complex math or forecasting
+
+---
+
+### Disclaimer
+This feature is for **educational and exploratory purposes only**.  
+All results depend entirely on user-provided assumptions.
