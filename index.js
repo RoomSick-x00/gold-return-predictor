@@ -74,26 +74,23 @@ function finalizePortfolio(investments, currentGoldPrice) {
   } else {
     console.log("Status: BREAK-EVEN");
   }
-  rl.question("Enter target profit amount: ", (targetProfit) => {
-    const targetProfitAmount = Number(targetProfit);
-    if (isNaN(targetProfitAmount) || targetProfitAmount < 0) {
-      console.log("Invalid target profit amount");
-      showMainMenu(currentGoldPrice);
+  console.log("--------------------------------");
+  console.log("Do you want to simulate future portfolio value?");
+  rl.question("Type YES to simulate, or anything else to return to main menu: ", (answer) => {
+    if (answer.trim().toUpperCase() === "YES") {
+      simulateFuturePortfolio(investments, currentGoldPrice, () => {
+        console.log("Do you want to estimate the months required to reach your target profit?");
+        rl.question("Type YES to estimate, or anything else to return to main menu: ", (answer2) => {
+          if (answer2.trim().toUpperCase() === "YES") {
+            estimateTargetMonths(investments, currentGoldPrice);
+            return;
+          }
+          showMainMenu(currentGoldPrice);
+        });
+      });
       return;
     }
-    const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
-    console.log(`To earn ₹${targetProfitAmount}\nGold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
-    const extraAboveBreakEven = targetPricePerGram - result.breakEvenPricePerGram;
-    console.log(`That is ₹${extraAboveBreakEven.toFixed(2)} above break-even price`);
-    console.log("--------------------------------");
-    console.log("Do you want to simulate future portfolio value?");
-    rl.question("Type YES to simulate, or anything else to return to main menu: ", (answer)=>{
-      if (answer.trim().toUpperCase() === "YES") {
-        simulateFuturePortfolio(investments, currentGoldPrice);
-        return;
-      }
     showMainMenu(currentGoldPrice);
-    });
   });
 }
 
@@ -122,8 +119,49 @@ function startInvestmentFlow(currentGoldPrice) {
 }
 
 function savePortfolio(investments) {
-  const data = JSON.stringify({ investments }, null, 2); fs.writeFileSync(dataFile, data); 
+  const data = JSON.stringify({ investments }, null, 2); fs.writeFileSync(dataFile, data);
 }
+
+function estimateTargetMonths(investments, currentGoldPrice) {
+  const result = calculatePortfolioBreakEven(investments);
+
+  rl.question("Enter target profit amount (₹): ", (input) => {
+    const targetProfitAmount = Number(input);
+
+    if (isNaN(targetProfitAmount) || targetProfitAmount <= 0) {
+      console.log("Invalid target profit amount.");
+      showMainMenu(currentGoldPrice);
+      return;
+    }
+
+    const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
+
+    console.log(`\nTo earn ₹${targetProfitAmount}, gold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
+
+    console.log(`That is ₹${(targetPricePerGram - result.breakEvenPricePerGram).toFixed(2)} above break-even price.`);
+
+    askYearlyGrowth((yearlyGrowth) => {
+      const monthlyGrowth = yearlyGrowth / 12;
+      let simulatedPrice = currentGoldPrice;
+
+      const MAX_MONTHS = 1200;
+
+      for (let month = 1; month <= MAX_MONTHS; month++) {
+        simulatedPrice = simulatedPrice * (1 + monthlyGrowth / 100);
+
+        if (simulatedPrice >= targetPricePerGram) {
+          console.log(`\nAt ${yearlyGrowth}% yearly growth, the target profit may be reached in approximately ${month} months.`);
+          showMainMenu(currentGoldPrice);
+          return;
+        }
+      }
+
+      console.log("\nTarget not reached within reasonable simulation period.");
+      showMainMenu(currentGoldPrice);
+    });
+  });
+}
+
 
 function askInvestment(count, n, currentGoldPrice, choice) {
   function proceed(investmentData) {
@@ -169,22 +207,39 @@ function askInvestment(count, n, currentGoldPrice, choice) {
   }
 }
 
-function simulateFuturePortfolio(investments, currentGoldPrice){
+function askYearlyGrowth(callback) {
+  rl.question(
+    "Enter the yearly gold price increase percentage to simulate: ",
+    (input) => {
+      const yearlyGrowth = Number(input);
+
+      if (isNaN(yearlyGrowth) || yearlyGrowth <= 0) {
+        console.log("Invalid yearly growth percentage.");
+        showMainMenu(currentGoldPrice);
+        return;
+      }
+
+      callback(yearlyGrowth);
+    }
+  );
+}
+
+
+function simulateFuturePortfolio(investments, currentGoldPrice, onDone) {
   const result = calculatePortfolioBreakEven(investments);
-  rl.question("Enter the yearly gold price increase percentage to simulate: ", (increaseInput) => {
-    const yearlyGrowth = Number(increaseInput);
+  askYearlyGrowth((yearlyGrowth) => {
     const monthlyGrowth = yearlyGrowth / 12;
     rl.question("Enter number of months to simulate: ", (monthsInput) => {
       const months = Number(monthsInput);
       let simulatedPrice = currentGoldPrice;
-      for (let month = 1; month<=months; month++){
+      for (let month = 1; month <= months; month++) {
         console.log(`\n --- Month ${month} ---`);
         simulatedPrice = simulatedPrice * (monthlyGrowth / 100 + 1);
         console.log("Simulated Gold Price per gram: ₹", simulatedPrice.toFixed(2));
         const simulatedValue = simulatedPrice * result.totalQuantity;
         console.log(`Current Value : ₹${simulatedValue.toFixed(2)}`);
       }
-      showMainMenu(currentGoldPrice);
+      onDone();
     });
   });
 }
