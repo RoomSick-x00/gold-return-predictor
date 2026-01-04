@@ -140,7 +140,7 @@ function estimateTargetMonths(investments, currentGoldPrice) {
 
     console.log(`That is ₹${(targetPricePerGram - result.breakEvenPricePerGram).toFixed(2)} above break-even price.`);
 
-    askYearlyGrowth((yearlyGrowth) => {
+    askYearlyGrowth(currentGoldPrice, (yearlyGrowth) => {
       const monthlyGrowth = yearlyGrowth / 12;
       let simulatedPrice = currentGoldPrice;
 
@@ -207,7 +207,7 @@ function askInvestment(count, n, currentGoldPrice, choice) {
   }
 }
 
-function askYearlyGrowth(callback) {
+function askYearlyGrowth(currentGoldPrice, callback) {
   rl.question(
     "Enter the yearly gold price increase percentage to simulate: ",
     (input) => {
@@ -227,7 +227,7 @@ function askYearlyGrowth(callback) {
 
 function simulateFuturePortfolio(investments, currentGoldPrice, onDone) {
   const result = calculatePortfolioBreakEven(investments);
-  askYearlyGrowth((yearlyGrowth) => {
+  askYearlyGrowth(currentGoldPrice, (yearlyGrowth) => {
     const monthlyGrowth = yearlyGrowth / 12;
     rl.question("Enter number of months to simulate: ", (monthsInput) => {
       const months = Number(monthsInput);
