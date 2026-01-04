@@ -184,3 +184,99 @@ This approach is:
 ### Disclaimer
 This feature is for **educational and exploratory purposes only**.  
 All results depend entirely on user-provided assumptions.
+---
+
+## 📈 v0.7 — Future Portfolio Prediction (Assumption-Based)
+
+Version **v0.7** introduces **future-oriented analysis features** that help users explore *possible* outcomes of their gold investments using **user-defined growth assumptions**.
+
+> ⚠️ This version does **not** use real market data or APIs.  
+> All results are **simulations**, not predictions.
+
+---
+
+### ✨ New Features in v0.7
+
+#### 1️⃣ Future Portfolio Simulation
+- Simulates how the portfolio value may change over time
+- User provides:
+  - Assumed **yearly gold price growth (%)**
+  - Number of **months** to simulate
+- The app:
+  - Converts yearly growth to **monthly compounded growth**
+  - Prints simulated gold price and portfolio value month-by-month
+
+#### 2️⃣ Target Profit Time Estimation
+- User provides a **target profit amount**
+- The app calculates:
+  - Required **target price per gram**
+  - Difference above **break-even price**
+- Using the same assumed yearly growth:
+  - Estimates the **approximate number of months** needed to reach the target
+
+#### 3️⃣ Reusable Growth Input (UX & Code Improvement)
+- Yearly growth input is handled by a shared helper function
+- Prevents duplicate prompts and logic
+- Keeps growth assumptions consistent across features
+
+---
+
+### 🔁 User Flow (High Level)
+
+1. User views **Portfolio Summary**
+2. App asks whether to:
+   - Simulate future portfolio value
+3. After simulation, user may choose to:
+   - Estimate time to reach a target profit
+4. User is safely returned to the main menu
+
+All flows are optional and non-destructive.
+
+---
+
+### 📐 Calculation Logic Used
+
+- **Monthly Growth Conversion**
+  monthlyGrowth = yearlyGrowth / 12 
+
+- **Monthly Price Update**
+  monthlyGrowth = yearlyGrowth / 12
+
+- **Monthly Price Update**
+  price = price × (1 + monthlyGrowth / 100)
+
+- Portfolio quantity remains constant during simulation
+
+---
+
+### 🧠 Design Notes
+
+- v0.7 does **not modify** any existing portfolio data
+- All calculations are performed **in-memory**
+- Async flow is managed using **callbacks**, not Promises
+- `onDone()` callbacks are used to ensure:
+- No overlapping CLI prompts
+- Predictable menu flow
+
+---
+
+### ⚠️ Limitations (Intentional)
+
+- No live gold prices
+- No historical trends
+- No volatility or randomness
+- No inflation or taxation modeling
+
+These are planned considerations for future versions.
+
+---
+
+### ✅ Version Status
+
+- v0.5 → Portfolio & calculations (Frozen)
+- v0.6 → Internal structure & groundwork
+- **v0.7 → Future simulation & target estimation**
+- Status: **Stable**
+
+---
+
