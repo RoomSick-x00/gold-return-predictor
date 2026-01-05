@@ -50,48 +50,35 @@ function confirmClearPortfolio(currentGoldPrice) {
 }
 
 function finalizePortfolio(investments, currentGoldPrice) {
-  const result = calculatePortfolioBreakEven(investments);
-  const currentValue = currentGoldPrice * result.totalQuantity;
-  console.log("--------------------------------");
-  console.log("📊 Portfolio Status");
-  console.log("Current Value : ₹", currentValue.toFixed(2));
-  console.log("Invested      : ₹", result.totalInvested.toFixed(2));
-  console.log("--------------------------------");
-  console.log("Investment Summary: ");
-  console.log("Total Invested Amount:", result.totalInvested);
-  console.log("Total Quantity (grams):", result.totalQuantity);
-  console.log("Portfolio break-even price per gram:", result.breakEvenPricePerGram.toFixed(2));
-  console.log("Portfolio break-even value:", result.breakEvenValue.toFixed(2));
-  console.log("--------------------------------");
-  if (currentGoldPrice > result.breakEvenPricePerGram) {
-    const profit = (currentGoldPrice - result.breakEvenPricePerGram) * result.totalQuantity;
-    console.log("Status: PROFIT");
-    console.log("Profit Amount:", profit.toFixed(2));
-  } else if (currentGoldPrice < result.breakEvenPricePerGram) {
-    const loss = (result.breakEvenPricePerGram - currentGoldPrice) * result.totalQuantity;
-    console.log("Status: LOSS");
-    console.log("Loss Amount:", loss.toFixed(2));
-  } else {
-    console.log("Status: BREAK-EVEN");
-  }
+  const status = getPortfolioStatus(investments, currentGoldPrice);
+  printPortfolioSummary(status);
+
   console.log("--------------------------------");
   console.log("Do you want to simulate future portfolio value?");
-  rl.question("Type YES to simulate, or anything else to return to main menu: ", (answer) => {
-    if (answer.trim().toUpperCase() === "YES") {
-      simulateFuturePortfolio(investments, currentGoldPrice, () => {
-        console.log("Do you want to estimate the months required to reach your target profit?");
-        rl.question("Type YES to estimate, or anything else to return to main menu: ", (answer2) => {
-          if (answer2.trim().toUpperCase() === "YES") {
-            estimateTargetMonths(investments, currentGoldPrice);
-            return;
-          }
-          showMainMenu(currentGoldPrice);
+  rl.question(
+    "Type YES to simulate, or anything else to return to main menu: ",
+    (answer) => {
+      if (answer.trim().toUpperCase() === "YES") {
+        simulateFuturePortfolio(investments, currentGoldPrice, () => {
+          console.log(
+            "Do you want to estimate the months required to reach your target profit?"
+          );
+          rl.question(
+            "Type YES to estimate, or anything else to return to main menu: ",
+            (answer2) => {
+              if (answer2.trim().toUpperCase() === "YES") {
+                estimateTargetMonths(investments, currentGoldPrice);
+                return;
+              }
+              showMainMenu(currentGoldPrice);
+            }
+          );
         });
-      });
-      return;
+        return;
+      }
+      showMainMenu(currentGoldPrice);
     }
-    showMainMenu(currentGoldPrice);
-  });
+  );
 }
 
 function startInvestmentFlow(currentGoldPrice) {
@@ -116,6 +103,54 @@ function startInvestmentFlow(currentGoldPrice) {
       askInvestment(0, n, currentGoldPrice, choice);
     });
   });
+}
+
+function getPortfolioStatus(investments, currentGoldPrice) {
+  const result = calculatePortfolioBreakEven(investments);
+  const currentValue = currentGoldPrice * result.totalQuantity;
+  const pnl = currentValue - result.totalInvested;
+
+  return {
+    totalInvested: result.totalInvested,
+    totalQuantity: result.totalQuantity,
+    breakEvenPricePerGram: result.breakEvenPricePerGram,
+    breakEvenValue: result.breakEvenValue,
+    currentValue,
+    pnl,
+    status:
+      pnl > 0 ? "PROFIT" :
+      pnl < 0 ? "LOSS" : "BREAK-EVEN"
+  };
+}
+
+function printPortfolioSummary(status) {
+  console.log("--------------------------------");
+  console.log("📊 Portfolio Status");
+  console.log("Current Value : ₹", status.currentValue.toFixed(2));
+  console.log("Invested      : ₹", status.totalInvested.toFixed(2));
+  console.log("--------------------------------");
+
+  console.log("Investment Summary:");
+  console.log("Total Quantity (grams):", status.totalQuantity);
+  console.log(
+    "Portfolio break-even price per gram:",
+    status.breakEvenPricePerGram.toFixed(2)
+  );
+  console.log(
+    "Portfolio break-even value:",
+    status.breakEvenValue.toFixed(2)
+  );
+  console.log("--------------------------------");
+
+  if (status.status === "PROFIT") {
+    console.log("Status: PROFIT");
+    console.log("Profit Amount:", status.pnl.toFixed(2));
+  } else if (status.status === "LOSS") {
+    console.log("Status: LOSS");
+    console.log("Loss Amount:", Math.abs(status.pnl).toFixed(2));
+  } else {
+    console.log("Status: BREAK-EVEN");
+  }
 }
 
 function savePortfolio(investments) {
