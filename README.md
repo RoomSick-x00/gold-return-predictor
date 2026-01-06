@@ -279,4 +279,85 @@ These are planned considerations for future versions.
 - Status: **Stable**
 
 ---
+## v0.8 – Portfolio Logic Refactor & Clean Architecture
+
+### ✨ What’s New
+
+Version **v0.8** focuses on improving **code structure, readability, and reusability** without changing user-facing behavior.
+
+The portfolio summary logic has been refactored into **dedicated helper functions**, following the **single-responsibility principle**.
+
+---
+
+### 🔹 New Core Functions
+
+#### 1. `getPortfolioStatus(investments, currentGoldPrice)`
+
+A **pure logic function** that:
+- Calculates portfolio metrics
+- Determines profit / loss / break-even status
+- Returns structured data instead of printing
+
+**Returns:**
+- Total invested amount
+- Total gold quantity
+- Break-even price per gram
+- Break-even portfolio value
+- Current portfolio value
+- PnL (profit or loss)
+- Portfolio status (`PROFIT`, `LOSS`, `BREAK-EVEN`)
+
+This function contains **no user input or console output**, making it reusable and testable.
+
+---
+
+#### 2. `printPortfolioSummary(status)`
+
+A **presentation-only function** that:
+- Takes the object returned by `getPortfolioStatus`
+- Prints a formatted portfolio summary to the console
+
+This cleanly separates **calculation logic** from **display logic**.
+
+---
+
+### 🔹 Updated `finalizePortfolio` Flow
+
+`finalizePortfolio` now acts as an **orchestrator**:
+- Fetches portfolio status using `getPortfolioStatus`
+- Displays results using `printPortfolioSummary`
+- Handles user decisions (simulate future value, estimate target months, return to menu)
+
+This makes the function:
+- Shorter
+- Easier to read
+- Easier to extend in future versions
+
+---
+
+### 🧠 Why This Matters
+
+- Improves maintainability as features grow
+- Enables future enhancements like:
+  - CSV/JSON exports
+  - Graphs and visualizations
+  - Automated tests
+  - GUI or API integration
+- Reduces duplicated calculations across features
+
+---
+
+### 🧱 Architectural Improvements
+
+- Clear separation of:
+  - **Business logic**
+  - **Console output**
+  - **User flow control**
+- Lays foundation for async/await refactor in future versions
+
+---
+
+### 🚀 Summary
+
+v0.8 does not add new features, but significantly improves **internal design quality**, making the application easier to scale, debug, and enhance in upcoming releases.
 
