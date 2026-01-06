@@ -10,6 +10,14 @@ const rl = readline.createInterface({
 const dataFile = path.join(__dirname, "portfolio.json");
 let investments = [];
 
+function ask(question) {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  })
+}
+
 if (fs.existsSync(dataFile)) {
   const fileData = fs.readFileSync(dataFile, "utf-8");
   const parsedData = JSON.parse(fileData);
@@ -49,37 +57,24 @@ function confirmClearPortfolio(currentGoldPrice) {
   });
 }
 
-function finalizePortfolio(investments, currentGoldPrice) {
+async function finalizePortfolio(investments, currentGoldPrice) {
   const status = getPortfolioStatus(investments, currentGoldPrice);
   printPortfolioSummary(status);
-
   console.log("--------------------------------");
-  console.log("Do you want to simulate future portfolio value?");
-  rl.question(
-    "Type YES to simulate, or anything else to return to main menu: ",
-    (answer) => {
-      if (answer.trim().toUpperCase() === "YES") {
-        simulateFuturePortfolio(investments, currentGoldPrice, () => {
-          console.log(
-            "Do you want to estimate the months required to reach your target profit?"
-          );
-          rl.question(
-            "Type YES to estimate, or anything else to return to main menu: ",
-            (answer2) => {
-              if (answer2.trim().toUpperCase() === "YES") {
-                estimateTargetMonths(investments, currentGoldPrice);
-                return;
-              }
-              showMainMenu(currentGoldPrice);
-            }
-          );
-        });
-        return;
-      }
-      showMainMenu(currentGoldPrice);
+  const answer = (await ask("Do you want to simulate future portfolio value? Type YES to simulate, or anything else to return: ")).trim().toUpperCase();
+
+  if (answer === "YES") {
+    await simulateFuturePortfolio(investments, currentGoldPrice);
+    const answer2 = (await ask("Do you want to estimate the months required to reach your target profit? Type YES to estimate, or anything else to return: ")).trim().toUpperCase();
+    if (answer2 === "YES") {
+      await estimateTargetMonths(investments, currentGoldPrice);
+      return;
     }
-  );
+  }
+
+  showMainMenu(currentGoldPrice);
 }
+
 
 function startInvestmentFlow(currentGoldPrice) {
   rl.question("Enter the number of investements: ", (numberOfInvestements) => {
@@ -119,7 +114,7 @@ function getPortfolioStatus(investments, currentGoldPrice) {
     pnl,
     status:
       pnl > 0 ? "PROFIT" :
-      pnl < 0 ? "LOSS" : "BREAK-EVEN"
+        pnl < 0 ? "LOSS" : "BREAK-EVEN"
   };
 }
 
@@ -157,44 +152,44 @@ function savePortfolio(investments) {
   const data = JSON.stringify({ investments }, null, 2); fs.writeFileSync(dataFile, data);
 }
 
-function estimateTargetMonths(investments, currentGoldPrice) {
+async function estimateTargetMonths(investments, currentGoldPrice) {
   const result = calculatePortfolioBreakEven(investments);
 
-  rl.question("Enter target profit amount (₹): ", (input) => {
-    const targetProfitAmount = Number(input);
+  const input = await ask("Enter target profit amount (₹): ");
+  if (yearlyGrowth === null) return;
+  const targetProfitAmount = Number(input);
 
-    if (isNaN(targetProfitAmount) || targetProfitAmount <= 0) {
-      console.log("Invalid target profit amount.");
+
+  if (isNaN(targetProfitAmount) || targetProfitAmount <= 0) {
+    console.log("Invalid target profit amount.");
+    showMainMenu(currentGoldPrice);
+    return;
+  }
+
+  const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
+
+  console.log(`\nTo earn ₹${targetProfitAmount}, gold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
+
+  console.log(`That is ₹${(targetPricePerGram - result.breakEvenPricePerGram).toFixed(2)} above break-even price.`);
+
+  const yearlyGrowth = await askYearlyGrowth(currentGoldPrice);
+  const monthlyGrowth = yearlyGrowth / 12;
+  let simulatedPrice = currentGoldPrice;
+
+  const MAX_MONTHS = 1200;
+
+  for (let month = 1; month <= MAX_MONTHS; month++) {
+    simulatedPrice = simulatedPrice * (1 + monthlyGrowth / 100);
+
+    if (simulatedPrice >= targetPricePerGram) {
+      console.log(`\nAt ${yearlyGrowth}% yearly growth, the target profit may be reached in approximately ${month} months.`);
       showMainMenu(currentGoldPrice);
       return;
     }
+  }
 
-    const targetPricePerGram = (result.totalInvested + targetProfitAmount) / result.totalQuantity;
-
-    console.log(`\nTo earn ₹${targetProfitAmount}, gold must reach ₹${targetPricePerGram.toFixed(2)} per gram.`);
-
-    console.log(`That is ₹${(targetPricePerGram - result.breakEvenPricePerGram).toFixed(2)} above break-even price.`);
-
-    askYearlyGrowth(currentGoldPrice, (yearlyGrowth) => {
-      const monthlyGrowth = yearlyGrowth / 12;
-      let simulatedPrice = currentGoldPrice;
-
-      const MAX_MONTHS = 1200;
-
-      for (let month = 1; month <= MAX_MONTHS; month++) {
-        simulatedPrice = simulatedPrice * (1 + monthlyGrowth / 100);
-
-        if (simulatedPrice >= targetPricePerGram) {
-          console.log(`\nAt ${yearlyGrowth}% yearly growth, the target profit may be reached in approximately ${month} months.`);
-          showMainMenu(currentGoldPrice);
-          return;
-        }
-      }
-
-      console.log("\nTarget not reached within reasonable simulation period.");
-      showMainMenu(currentGoldPrice);
-    });
-  });
+  console.log("\nTarget not reached within reasonable simulation period.");
+  showMainMenu(currentGoldPrice);
 }
 
 
@@ -242,41 +237,39 @@ function askInvestment(count, n, currentGoldPrice, choice) {
   }
 }
 
-function askYearlyGrowth(currentGoldPrice, callback) {
-  rl.question(
-    "Enter the yearly gold price increase percentage to simulate: ",
-    (input) => {
-      const yearlyGrowth = Number(input);
+async function askYearlyGrowth(currentGoldPrice) {
+  const input = await ask("Enter the yearly gold price increase percentage to simulate: ");
+  const yearlyGrowth = Number(input);
 
-      if (isNaN(yearlyGrowth) || yearlyGrowth <= 0) {
-        console.log("Invalid yearly growth percentage.");
-        showMainMenu(currentGoldPrice);
-        return;
-      }
+  if (isNaN(yearlyGrowth) || yearlyGrowth <= 0) {
+    console.log("Invalid yearly growth percentage.");
+    showMainMenu(currentGoldPrice);
+    return null;
+  }
 
-      callback(yearlyGrowth);
-    }
-  );
+  return yearlyGrowth;
 }
 
-
-function simulateFuturePortfolio(investments, currentGoldPrice, onDone) {
+async function simulateFuturePortfolio(investments, currentGoldPrice) {
   const result = calculatePortfolioBreakEven(investments);
-  askYearlyGrowth(currentGoldPrice, (yearlyGrowth) => {
-    const monthlyGrowth = yearlyGrowth / 12;
-    rl.question("Enter number of months to simulate: ", (monthsInput) => {
-      const months = Number(monthsInput);
-      let simulatedPrice = currentGoldPrice;
-      for (let month = 1; month <= months; month++) {
-        console.log(`\n --- Month ${month} ---`);
-        simulatedPrice = simulatedPrice * (monthlyGrowth / 100 + 1);
-        console.log("Simulated Gold Price per gram: ₹", simulatedPrice.toFixed(2));
-        const simulatedValue = simulatedPrice * result.totalQuantity;
-        console.log(`Current Value : ₹${simulatedValue.toFixed(2)}`);
-      }
-      onDone();
-    });
-  });
+
+  const yearlyGrowth = await askYearlyGrowth(currentGoldPrice);
+  if (yearlyGrowth === null) return;
+
+  const monthlyGrowth = yearlyGrowth / 12;
+
+  const monthsInput = await ask("Enter number of months to simulate: ");
+  const months = Number(monthsInput);
+
+  let simulatedPrice = currentGoldPrice;
+
+  for (let month = 1; month <= months; month++) {
+    console.log(`\n --- Month ${month} ---`);
+    simulatedPrice = simulatedPrice * (1 + monthlyGrowth / 100);
+    console.log("Simulated Gold Price per gram: ₹", simulatedPrice.toFixed(2));
+    const simulatedValue = simulatedPrice * result.totalQuantity;
+    console.log(`Current Value : ₹${simulatedValue.toFixed(2)}`);
+  }
 }
 
 function showMainMenu(currentGoldPrice) {
