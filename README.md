@@ -363,3 +363,6 @@ v0.8 does not add new features, but significantly improves **internal design qua
 
 ### API thing
 ### AI MODEL PRED.
+
+v0.9 working with those api 
+live test actally excited about it and how it works
