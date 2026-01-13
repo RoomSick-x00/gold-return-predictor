@@ -1,6 +1,7 @@
 const fs = require("fs");
 const readline = require("readline");
 const path = require("path");
+const { fetchGoldPrice } = require("./goldPriceService");
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -30,17 +31,31 @@ if (fs.existsSync(dataFile)) {
 
 console.log("Welcome to Gold Return Predictor");
 
-rl.question("Enter current gold price per gram: ", (priceInput) => {
-  const currentGoldPrice = Number(priceInput);
+//Immediately Invoked Function Expression (IIFE)
+(async () => {
+  const livePricePerMg = await fetchGoldPrice();
 
-  if (isNaN(currentGoldPrice) || currentGoldPrice <= 0) {
-    console.log("Invalid gold price");
-    rl.close();
+  if (livePricePerMg !== null) {
+    const currentGoldPricePerGram = livePricePerMg * 1000;
+    console.log(`Current Gold Price (fetched): ₹${currentGoldPricePerGram.toFixed(2)} per gram`);
+    showMainMenu(currentGoldPricePerGram);
     return;
   }
 
-  showMainMenu(currentGoldPrice);
-});
+  // fallback: manual input
+  rl.question("Enter current gold price per gram: ", (priceInput) => {
+    const currentGoldPrice = Number(priceInput);
+
+    if (isNaN(currentGoldPrice) || currentGoldPrice <= 0) {
+      console.log("Invalid gold price");
+      rl.close();
+      return;
+    }
+
+    showMainMenu(currentGoldPrice);
+  });
+})();
+
 
 function confirmClearPortfolio(currentGoldPrice) {
   console.log("⚠️ This will permanently delete all investments.");
