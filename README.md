@@ -361,12 +361,36 @@ This makes the function:
 
 v0.8 does not add new features, but significantly improves **internal design quality**, making the application easier to scale, debug, and enhance in upcoming releases.
 
-### API thing
-### AI MODEL PRED.
+---------------------------------------------------------------------------------------------
+# OFFICIALLY INTO -> v1.0
 
-v0.9 working with those api 
-live test actally excited about it and how it works
+## v1.0 – Live Gold Price Integration
 
+### ✅ Features Implemented
+1. **Gold Price Service**
+   - `goldPriceService.js` created
+   - Fetches **live gold price** using Metal Price API
+   - Converts **XAU → INR → gram → milligram**
 
-looking upto v1.0
-### v1.0
+2. **Error Handling**
+   - Added `try/catch` for network errors
+   - Handles **timeouts**, invalid responses, and HTTP status errors
+   - Returns `null` if price unavailable, preventing CLI crash
+
+3. **CLI Integration**
+   - Automatically fetches live price at startup
+   - Falls back to **manual input** if API fails
+   - Compatible with existing portfolio logic (`showMainMenu`)
+
+4. **Async & Module Management**
+   - Used **async IIFE** to allow top-level `await`
+   - Exported `fetchGoldPrice` with `module.exports` for scalable use
+
+### ⚠️ Optional / Future Improvements (v1.1+)
+- Retry logic on network timeout  
+- Cache last known price for offline usage  
+- Move API key to environment variables (`.env`)  
+- Improved CLI message formatting  
+
+💡 **Summary:**  
+v1.0 introduces **live gold price fetching** safely and seamlessly into the CLI, without touching existing portfolio logic.
