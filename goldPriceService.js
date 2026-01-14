@@ -13,16 +13,34 @@ async function fetchGoldPrice() {
     const goldPriceInINRPerTroyOunce = 1 / data.rates.XAU;
     const goldPriceInINRPerGram = goldPriceInINRPerTroyOunce / 31.1034768;
     const goldPricePerMgram = goldPriceInINRPerGram / 1000;
+    saveCache(goldPricePerMgram);
     return goldPricePerMgram;
   }
   catch (error) {
-    if (error.cause?.code === "UND_ERR_CONNECT_TIMEOUT") {
-      console.error("Gold price service is not responding (timeout).");
-    } else {
-      console.error("Failed to fetch gold price:", error.message);
+    console.error("Live fetch failed, trying cache...");
+    const cachedPrice = readCache();
+    if (cachedPrice !== null) {
+        console.log("Using cached gold price.");
+        return cachedPrice;
     }
     return null;
   }
 }
 
 module.exports = { fetchGoldPrice };
+
+const fs = require("fs");
+const path = require("path");
+
+const CACHE_FILE = path.join(__dirname, "goldPriceCache.json");
+
+
+function saveCache(pricePerMg){
+  fs.writeFileSync(CACHE_FILE, JSON.stringify({ pricePerMg, timestamp: Date.now() }));
+}
+
+function readCache(){
+  if (!fs.existsSync(CACHE_FILE)) return null;
+  const data = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+  return data.pricePerMg;
+}
