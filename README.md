@@ -394,3 +394,29 @@ v0.8 does not add new features, but significantly improves **internal design qua
 
 💡 **Summary:**  
 v1.0 introduces **live gold price fetching** safely and seamlessly into the CLI, without touching existing portfolio logic.
+
+## v1.1 – Reliability & Configuration Improvements
+
+### ✅ Enhancements Added
+1. **Price Caching**
+   - Last successful live gold price is stored locally (`goldPriceCache.json`)
+   - Cached price is used automatically if API is unavailable or times out
+   - Improves reliability during network or API failures
+
+2. **Environment Variable Support**
+   - API key moved to `.env` file using `dotenv`
+   - Prevents hard-coding sensitive credentials
+   - Makes configuration cleaner and more secure
+
+3. **Safe Fallback Flow**
+   - Live price → Cached price → Manual input
+   - Application never crashes due to API failure
+   - Existing portfolio logic remains untouched
+
+### 🧠 Technical Notes
+- Uses synchronous file I/O for cache (intentional for CLI simplicity)
+- Cache includes timestamp for future extensibility
+- Fully backward compatible with v1.0 behavior
+
+💡 **Summary:**  
+v1.1 focuses on **stability and security**, ensuring the Gold Return Predictor works reliably even when live APIs fail.
