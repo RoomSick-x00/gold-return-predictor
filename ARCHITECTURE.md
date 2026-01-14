@@ -182,3 +182,75 @@ This ensures data integrity and safe upgrades.
 - API integration: Safe
 - Fallback system: Implemented
 - Ready for future refactors and extensions
+
+==============================
+ Gold Return Predictor
+ Startup Flow (ASCII Diagram)
+==============================
+
+            ┌─────────────────────┐
+            │   App Starts (CLI)   │
+            └─────────┬───────────┘
+                      │
+                      ▼
+            ┌─────────────────────┐
+            │ Load Dependencies    │
+            │ fs, readline, dotenv │
+            └─────────┬───────────┘
+                      │
+                      ▼
+            ┌─────────────────────┐
+            │ Load portfolio.json │
+            │ (if exists)         │
+            └─────────┬───────────┘
+                      │
+                      ▼
+            ┌──────────────────────────────┐
+            │ Resolve Current Gold Price   │
+            └─────────┬────────────────────┘
+                      │
+        ┌─────────────┼───────────────────┐
+        │             │                   │
+        ▼             ▼                   ▼
+
+┌────────────────┐ ┌────────────────┐ ┌────────────────────┐
+│ Live Gold API  │ │ Cached Price   │ │ Manual User Input  │
+│ (Primary)      │ │ (Fallback)     │ │ (Last Resort)      │
+└───────┬────────┘ └───────┬────────┘ └──────────┬─────────┘
+        │                  │                       │
+        │ success          │ success               │ success
+        ▼                  ▼                       ▼
+
+        ┌──────────────────────────────────────────┐
+        │   Gold Price Resolved (per gram)          │
+        └───────────────┬──────────────────────────┘
+                        │
+                        ▼
+        ┌──────────────────────────────────────────┐
+        │ Lock price for entire session             │
+        │ (No re-fetch during runtime)              │
+        └───────────────┬──────────────────────────┘
+                        │
+                        ▼
+        ┌──────────────────────────────────────────┐
+        │ Main Menu Loop                            │
+        │ - Portfolio summary                       │
+        │ - Profit / Loss                           │
+        │ - Target profit                           │
+        │ - Simulation                              │
+        └──────────────────────────────────────────┘
+
+
+====================================================
+ Key Principles
+====================================================
+
+- API failure never crashes the app
+- Cached price enables offline use
+- Manual input guarantees continuity
+- Portfolio data is never modified by price resolution
+- One gold price per session for consistency
+
+====================================================
+ End of Flow
+====================================================
