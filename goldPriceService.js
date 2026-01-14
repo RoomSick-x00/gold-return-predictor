@@ -1,5 +1,9 @@
 const https = require("https");
-const API_URL = "https://api.metalpriceapi.com/v1/latest?api_key=6797ef4b91f9d7a07ad4b9027289988f&base=INR&currencies=EUR,XAU,XAG";
+const API_KEY = process.env.METAL_API_KEY;
+const API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${API_KEY}&base=INR&currencies=EUR,XAU,XAG`;
+if (!API_KEY) {
+    throw new Error("METAL_API_KEY not set in environment");
+}
 
 async function fetchGoldPrice() {
   try {
